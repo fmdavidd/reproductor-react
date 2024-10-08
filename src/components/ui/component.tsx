@@ -206,7 +206,9 @@ export default function Component() {
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         autoPlay
+        src={songSrc || ""}  // Aquí se usa songSrc
       ></audio>
+
     </div>
   );
 }
