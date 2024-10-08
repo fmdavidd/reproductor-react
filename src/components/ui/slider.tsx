@@ -26,7 +26,7 @@ const Slider: React.FC<SliderProps> = ({
   return (
     <input
       type="range"
-      className={`slider ${className}`}
+      className={`slider ${className}`}  // Aquí se usa la clase personalizada
       defaultValue={defaultValue[0]}
       max={max}
       step={step}
@@ -34,6 +34,7 @@ const Slider: React.FC<SliderProps> = ({
       onChange={handleChange}
     />
   );
+  
 };
 
 export { Slider };

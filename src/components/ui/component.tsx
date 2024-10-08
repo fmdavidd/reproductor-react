@@ -10,6 +10,8 @@ export default function Component() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(50);
+  const [selectedSong, setSelectedSong] = useState<number | null>(null); // Estado para la canción seleccionada
+  const [songSrc, setSongSrc] = useState<string | null>(null); // Estado para la URL de la canción
 
   useEffect(() => {
     if (audioRef.current) {
@@ -51,34 +53,90 @@ export default function Component() {
     setVolume(value[0]);
   };
 
+  const handleSongClick = (songId: number, songPath: string) => {
+    setSelectedSong(songId); // Cambiar la canción seleccionada
+    setSongSrc(songPath); // Cambiar la canción que se reproduce
+    setCurrentTime(0); // Reiniciar la posición del tiempo
+    setIsPlaying(false); // Pausar la reproducción antes de iniciar la nueva canción
+
+    if (audioRef.current) {
+      audioRef.current.pause(); // Pausar la canción actual
+      audioRef.current.src = songPath; // Cambiar la fuente de la canción
+      audioRef.current.load(); // Cargar la nueva canción
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen w-screen bg-[#121212]">
-      <div className="flex-1 overflow-auto p-6">
-        <h1 className="text-2xl font-bold text-white mb-4">Tu Biblioteca</h1>
-        <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex items-center space-x-4 bg-[#1e1e1e] p-3 rounded-lg">
-              <Avatar>
-                <AvatarImage src={`/images/album${i}.jpg`} alt="Album cover" />
-              </Avatar>
-              <div className="flex-1">
-                <h2 className="text-white font-semibold">Canción {i}</h2>
-                <p className="text-[#b3b3b3] text-sm">Artista {i}</p>
+      {/* Contenido de la lista de canciones */}
+      {selectedSong === null ? (
+        <div className="flex-1 overflow-auto p-6">
+          <h1 className="text-2xl font-bold text-white mb-4">Tu Biblioteca</h1>
+          <div className="space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="flex items-center space-x-4 bg-[#1e1e1e] p-3 rounded-lg cursor-pointer"
+                onClick={() => handleSongClick(i, `/music/song${i}.mp3`)} // Asigna la canción correspondiente
+              >
+                <Avatar>
+                  <AvatarImage src={`/images/album${i}.jpg`} alt="Album cover" />
+                </Avatar>
+                <div className="flex-1">
+                  <h2 className="text-white font-semibold">Canción {i}</h2>
+                  <p className="text-[#b3b3b3] text-sm">Artista {i}</p>
+                </div>
+                <p className="text-[#b3b3b3] text-sm">3:45</p>
               </div>
-              <p className="text-[#b3b3b3] text-sm">3:45</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex-1 p-6">
+          {/* Vista de detalle de la canción seleccionada */}
+          <div className="flex items-center space-x-4 bg-[#1e1e1e] p-6 rounded-lg">
+            <Avatar>
+              <AvatarImage src={`/images/album${selectedSong}.jpg`} alt="Album cover" />
+            </Avatar>
+            <div className="flex-1">
+              <h2 className="text-white font-semibold">Canción {selectedSong}</h2>
+              <p className="text-[#b3b3b3] text-sm">Artista {selectedSong}</p>
+            </div>
+          </div>
+          <button
+            className="mt-6 bg-[#1e1e1e] text-white underline"
+            onClick={() => setSelectedSong(null)} // Volver a la lista de canciones
+          >
+            Volver a la lista
+          </button>
 
-      <div className="bg-[#1e1e1e] p-4 border-t border-gray-800">
+          {/* Cuadro con detalles de la canción */}
+          <div className="bg-[#1e1e1e] mt-6 p-4 rounded-lg">
+            <h3 className="text-white text-lg font-semibold">Detalles de la Canción</h3>
+            <p className="text-[#b3b3b3] text-sm">Esta es la descripción o información adicional sobre la canción {selectedSong}. Puedes incluir cualquier dato adicional aquí.</p>
+          </div>
+          <div className="bg-[#1e1e1e] mt-6 p-4 rounded-lg">
+            <h3 className="text-white text-lg font-semibold">Letra de canciòn</h3>
+            <p className="text-[#b3b3b3] text-sm">Esta es la letra de {selectedSong}.</p>
+          </div>
+          <div className="bg-[#1e1e1e] mt-6 p-4 rounded-lg">
+            <h3 className="text-white text-lg font-semibold">Oyentes Mensuales: 2.000.000</h3>
+            <h3 className="text-white text-lg font-semibold">Reproducciones Totales: 10.000.000</h3>
+          </div>
+        </div>
+      )}
+
+      {/* Reproductor que permanece fijo en la parte inferior */}
+      <div className="bg-[#1e1e1e] p-4 border-t border-gray-800 fixed bottom-0 w-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Avatar>
               <AvatarImage src="/images/now-playing.jpg" alt="Now playing" />
             </Avatar>
             <div>
-              <h3 className="text-white font-semibold">Canción Actual</h3>
+              <h3 className="text-white font-semibold">
+                {selectedSong !== null ? `Canción ${selectedSong}` : "Selecciona una canción"}
+              </h3>
               <p className="text-[#b3b3b3] text-sm">Artista</p>
             </div>
           </div>
@@ -145,9 +203,9 @@ export default function Component() {
 
       <audio
         ref={audioRef}
-        src="/music/song1.mp3"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
+        autoPlay
       ></audio>
     </div>
   );
