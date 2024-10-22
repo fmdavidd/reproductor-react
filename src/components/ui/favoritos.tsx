@@ -1,4 +1,3 @@
-// explorar.tsx
 import { useState, useRef, useEffect } from "react";
 import { Play, Pause, SkipBack, SkipForward, Volume2, Heart } from "lucide-react";
 import { Avatar, AvatarImage } from "./avatar";
@@ -24,7 +23,7 @@ const songsList: Song[] = [
   { id: 5, title: "Canción 5", artist: "Artista 5", albumCover: "/images/album5.jpg", duration: "3:45", path: "/music/song5.mp3" },
 ];
 
-export default function ExplorarComponent() {
+export default function FavoritosComponent() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -33,26 +32,22 @@ export default function ExplorarComponent() {
   const [selectedSong, setSelectedSong] = useState<number | null>(null);
   const [songSrc, setSongSrc] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<number[]>(() => {
-    // Recuperar favoritos del localStorage
     const savedFavorites = localStorage.getItem('favorites');
     return savedFavorites ? JSON.parse(savedFavorites) : [];
   });
 
+  // Filtrar solo las canciones favoritas
+  const favoriteSongs = songsList.filter(song => favorites.includes(song.id));
+
   useEffect(() => {
-    // Guardar favoritos en localStorage cuando cambien
+    if (audioRef.current) {
+      audioRef.current.volume = volume / 100;
+    }
+  }, [volume]);
+
+  useEffect(() => {
     localStorage.setItem('favorites', JSON.stringify(favorites));
   }, [favorites]);
-
-  const toggleFavorite = (songId: number, event: React.MouseEvent) => {
-    event.stopPropagation(); // Evitar que se active el onClick del div padre
-    setFavorites(prev => {
-      if (prev.includes(songId)) {
-        return prev.filter(id => id !== songId);
-      } else {
-        return [...prev, songId];
-      }
-    });
-  };
 
   const togglePlayPause = () => {
     if (audioRef.current) {
@@ -88,16 +83,27 @@ export default function ExplorarComponent() {
     setVolume(value[0]);
   };
 
+  const toggleFavorite = (songId: number, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setFavorites(prev => {
+      if (prev.includes(songId)) {
+        return prev.filter(id => id !== songId);
+      } else {
+        return [...prev, songId];
+      }
+    });
+  };
+
   const handleSongClick = (songId: number, songPath: string) => {
-    setSelectedSong(songId); // Cambiar la canción seleccionada
-    setSongSrc(songPath); // Cambiar la canción que se reproduce
-    setCurrentTime(0); // Reiniciar la posición del tiempo
-    setIsPlaying(false); // Pausar la reproducción antes de iniciar la nueva canción
+    setSelectedSong(songId);
+    setSongSrc(songPath);
+    setCurrentTime(0);
+    setIsPlaying(false);
 
     if (audioRef.current) {
-      audioRef.current.pause(); // Pausar la canción actual
-      audioRef.current.src = songPath; // Cambiar la fuente de la canción
-      audioRef.current.load(); // Cargar la nueva canción
+      audioRef.current.pause();
+      audioRef.current.src = songPath;
+      audioRef.current.load();
     }
   };
 
@@ -105,9 +111,9 @@ export default function ExplorarComponent() {
     <div className="flex flex-col h-screen w-screen bg-[#121212] pt-16">
       {selectedSong === null ? (
         <div className="flex-1 overflow-auto p-6">
-          <h1 className="text-2xl font-bold text-white mb-4">Tu Biblioteca</h1>
+          <h1 className="text-2xl font-bold text-white mb-4">Tus Favoritos</h1>
           <div className="space-y-4">
-            {songsList.map((song) => (
+            {favoriteSongs.map((song) => (
               <div
                 key={song.id}
                 className="flex items-center space-x-4 bg-[#1e1e1e] p-3 rounded-lg cursor-pointer"
@@ -120,7 +126,7 @@ export default function ExplorarComponent() {
                   <h2 className="text-white font-semibold">{song.title}</h2>
                   <p className="text-[#b3b3b3] text-sm">{song.artist}</p>
                 </div>
-                  <Button
+                <Button
                     variant="ghost"
                     size="icon"
                     className="flex justify-center items-center text-white hover:text-white border-none bg-gray-800 border-none"
@@ -130,38 +136,50 @@ export default function ExplorarComponent() {
                       className={favorites.includes(song.id) ? "fill-red-500 text-red-500" : ""}
                     />
                   </Button>
-
                 <p className="text-[#b3b3b3] text-sm">{song.duration}</p>
               </div>
             ))}
+            {favoriteSongs.length === 0 && (
+              <div className="text-center text-[#b3b3b3] py-8">
+                <p>No tienes canciones favoritas aún</p>
+                <p className="text-sm mt-2">Agrega canciones a favoritos desde la biblioteca</p>
+              </div>
+            )}
           </div>
         </div>
       ) : (
         <div className="flex-1 p-6">
-          {/* Vista de detalle de la canción seleccionada */}
           <div className="flex items-center space-x-4 bg-[#1e1e1e] p-6 rounded-lg">
             <Avatar>
-              <AvatarImage src={`/images/album${selectedSong}.jpg`} alt="Album cover" />
+              <AvatarImage 
+                src={favoriteSongs.find(song => song.id === selectedSong)?.albumCover || "/images/default-album.jpg"} 
+                alt="Album cover" 
+              />
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-white font-semibold">Canción {selectedSong}</h2>
-              <p className="text-[#b3b3b3] text-sm">Artista {selectedSong}</p>
+              <h2 className="text-white font-semibold">
+                {favoriteSongs.find(song => song.id === selectedSong)?.title || "Canción no encontrada"}
+              </h2>
+              <p className="text-[#b3b3b3] text-sm">
+                {favoriteSongs.find(song => song.id === selectedSong)?.artist || "Artista desconocido"}
+              </p>
             </div>
           </div>
           <button
             className="mt-6 bg-[#1e1e1e] text-white underline"
-            onClick={() => setSelectedSong(null)} // Volver a la lista de canciones
+            onClick={() => setSelectedSong(null)}
           >
             Volver a la lista
           </button>
 
-          {/* Cuadro con detalles de la canción */}
           <div className="bg-[#1e1e1e] mt-6 p-4 rounded-lg">
             <h3 className="text-white text-lg font-semibold">Detalles de la Canción</h3>
-            <p className="text-[#b3b3b3] text-sm">Esta es la descripción o información adicional sobre la canción {selectedSong}. Puedes incluir cualquier dato adicional aquí.</p>
+            <p className="text-[#b3b3b3] text-sm">
+              Esta es la descripción o información adicional sobre la canción {selectedSong}.
+            </p>
           </div>
           <div className="bg-[#1e1e1e] mt-6 p-4 rounded-lg">
-            <h3 className="text-white text-lg font-semibold">Letra de canciòn</h3>
+            <h3 className="text-white text-lg font-semibold">Letra de canción</h3>
             <p className="text-[#b3b3b3] text-sm">Esta es la letra de {selectedSong}.</p>
           </div>
           <div className="bg-[#1e1e1e] mt-6 p-4 rounded-lg">
@@ -176,13 +194,24 @@ export default function ExplorarComponent() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <Avatar>
-              <AvatarImage src="/images/now-playing.jpg" alt="Now playing" />
+              <AvatarImage
+                src={favoriteSongs.find(song => song.id === selectedSong)?.albumCover || "/images/now-playing.jpg"}
+                alt="Now playing"
+              />
             </Avatar>
             <div>
               <h3 className="text-white font-semibold">
-                {selectedSong !== null ? `Canción ${selectedSong}` : "Selecciona una canción"}
+                {selectedSong ? 
+                  favoriteSongs.find(song => song.id === selectedSong)?.title :
+                  "Selecciona una canción"
+                }
               </h3>
-              <p className="text-[#b3b3b3] text-sm">Artista</p>
+              <p className="text-[#b3b3b3] text-sm">
+                {selectedSong ? 
+                  favoriteSongs.find(song => song.id === selectedSong)?.artist :
+                  "Artista"
+                }
+              </p>
             </div>
           </div>
 
@@ -251,9 +280,8 @@ export default function ExplorarComponent() {
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         autoPlay
-        src={songSrc || ""}  // Aquí se usa songSrc
-      ></audio>
-
+        src={songSrc || ""}
+      />
     </div>
   );
 }
