@@ -9,7 +9,6 @@ function Navbar() {
           <Link to="/" className="hover:underline text-white">Inicio</Link>
           <Link to="/explorar" className="hover:underline text-white">Explorar</Link>
           <Link to="/favoritos" className="hover:underline text-white">Favoritos</Link>
-          <Link to="/pdf" className="hover:underline text-white">PDF</Link>
         </div>
       </div>
     </nav>

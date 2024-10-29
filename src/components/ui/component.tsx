@@ -105,7 +105,7 @@ export default function ExplorarComponent() {
     <div className="flex flex-col h-screen w-screen bg-[#121212] pt-16">
       {selectedSong === null ? (
         <div className="flex-1 overflow-auto p-6">
-          <h1 className="text-2xl font-bold text-white mb-4">Tu Biblioteca</h1>
+          <h1 className="text-2xl font-bold text-white mb-4">Biblioteca</h1>
           <div className="space-y-4">
             {songsList.map((song) => (
               <div
